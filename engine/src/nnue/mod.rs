@@ -1,7 +1,7 @@
 use super::*;
 
 mod transformer;
-use transformer::Transformer;
+pub use transformer::Transformer;
 
 
 
@@ -27,7 +27,7 @@ pub struct Nnue {
 
 
 impl Nnue {
-    pub fn eval(&self, transformer: &Transformer, active: Color) -> i32 {
+    fn eval(&self, transformer: &Transformer, active: Color) -> i32 {
 
         // get one input [f32; 256]
         let mut input: [f32; 256] = [0.0; 256];
@@ -59,10 +59,11 @@ impl Nnue {
         for i in 0..32 {
             h2[i] = self.hidden1_bias[i] as f32;
             for j in 0..32 {
-                h2[i] += h1[j] * self.hidden1_weights[i * 256 + j] as f32;
+                h2[i] += h1[j] * self.hidden1_weights[i * 32 + j] as f32;
             }
             h2[i] = h2[i].clamp(0.0, 1.0);
         }
+
 
 
         // output layer [f32; 32] -> f32
@@ -78,3 +79,9 @@ impl Nnue {
 }
 
 
+
+impl Game {
+    pub fn nnue_eval(&self) -> i32 {
+        NNUE.eval(&self.transformer, self.player)
+    }
+}

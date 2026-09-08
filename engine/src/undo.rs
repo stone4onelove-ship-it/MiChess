@@ -1,5 +1,4 @@
-pub use super::types::*;
-pub use super::{Game, GameMode};
+use super::*;
 
 
 #[derive(Clone)]
@@ -42,17 +41,22 @@ impl Game {
     }
 
     pub fn undo(&mut self) -> bool {
-        if !self.history.is_empty() {
-            let current_dirty = self.dirty;
-            let log = self.history.pop().unwrap();
-            self.load(log);
-            self.update(current_dirty);
+        // check if the is hostory
+        let Some(log) = self.history.pop() else {
+            return false;
+        };
 
-            true
-        } else {
-            false
-        }
-        
-        
+        // save current values
+        let current_dirty = self.dirty;
+        let current_played = self.played.unwrap();
+
+        // undo the last move
+        self.load(log);
+        self.update(current_dirty);
+
+        // undo transformer
+        self.transformer.undo(&NNUE, &self.board, self.king_pos, current_played);
+
+        true        
     }
 }

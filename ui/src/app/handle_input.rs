@@ -17,7 +17,6 @@ impl App {
         // print game
         if ui.input(|i| i.key_pressed(egui::Key::C)) {
             println!("{}", self.game);
-            self.update_state();
         }
 
     }
@@ -85,7 +84,8 @@ impl App {
                         let chess_pos = ((pos.y / self.square_size) as u8)*8 + (pos.x / self.square_size) as u8;
                         
                         if Some(chess_pos) != self.selected {
-                            if self.game.play((selected, chess_pos)) {
+                            if timed(|| self.game.play((selected, chess_pos))) {
+                                println!("eval: {}", timed(|| self.game.nnue_eval()));
                                 self.update_state();
                                 self.selected = None;
                             }

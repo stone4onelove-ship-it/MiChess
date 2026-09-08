@@ -1,3 +1,13 @@
+current time in --resease:
+    play: 10µs
+    undo: 2µs
+    eval: 22µs
+
+
+
+
+
+
 full main with clone in play:
     took: 628.868098ms
 

@@ -1,45 +1,46 @@
 use super::*;
 
-type FeatureVector = [f32; 128];
-
 
 // holds second layer info and updates it dinamically
-pub struct Transformer (pub FeatureVector, pub FeatureVector);
+#[derive(Clone)]
+pub struct Transformer (pub [f32; 128], pub [f32; 128]);
 
 impl Transformer {
-    pub fn new(nnue: &Nnue, game: &Game) -> Self {
+    pub fn new(nnue: &Nnue, board: &Board, king_pos: [Pos;2] ) -> Self {
         let mut transformer = Transformer(nnue.feature_bias, nnue.feature_bias);
 
         for pos in 0..64 {
-            if let Some(piece) = game.board[pos] {
+            if let Some(piece) = board[pos] {
                 // for every piece
-                transformer.add(nnue, get_features(piece, pos, game.king_pos));
+                transformer.add(nnue, get_features(piece, pos, king_pos));
             }
         }
         transformer
     }
 
-    pub fn play(&mut self, nnue: &Nnue, game: &Game, played: PlayedMove) -> () {
-        let played_piece = game.board[played.mv.1].unwrap();
+
+
+    pub fn play(&mut self, nnue: &Nnue, board: &Board, king_pos: [Pos;2], played: PlayedMove) -> () {
+        let played_piece = board[played.mv.1].unwrap();
         // if king move
         if played_piece.role == Role::King {
-            *self = Transformer::new(nnue, game);
+            *self = Transformer::new(nnue, board, king_pos);
             return
         }
         // if captured
         if let Some(captured) = played.captured {
-            self.remove(nnue, get_features(captured, played.mv.1, game.king_pos));
+            self.remove(nnue, get_features(captured, played.mv.1, king_pos));
         }
         // if promotion
         if played.tp == MoveType::Promotion {
             let pawn = Piece { color: played_piece.color, role: Role::Pawn };
-            self.remove(nnue, get_features(pawn, played.mv.0, game.king_pos));
-            self.add(nnue, get_features(played_piece, played.mv.1, game.king_pos));
+            self.remove(nnue, get_features(pawn, played.mv.0, king_pos));
+            self.add(nnue, get_features(played_piece, played.mv.1, king_pos));
             return
         }
         // basic move
-        self.remove(nnue, get_features(played_piece, played.mv.0, game.king_pos));
-        self.add(nnue, get_features(played_piece, played.mv.1, game.king_pos));
+        self.remove(nnue, get_features(played_piece, played.mv.0, king_pos));
+        self.add(nnue, get_features(played_piece, played.mv.1, king_pos));
 
     }
 
@@ -47,27 +48,27 @@ impl Transformer {
 
 
 
-    pub fn undo(&mut self, nnue: &Nnue, game: &Game, unplayed: PlayedMove) -> () {
-        let unplayed_piece = game.board[unplayed.mv.0].unwrap();
+    pub fn undo(&mut self, nnue: &Nnue, board: &Board, king_pos: [Pos;2], unplayed: PlayedMove) -> () {
+        let unplayed_piece = board[unplayed.mv.0].unwrap();
         // if king unmove
         if unplayed_piece.role == Role::King {
-            *self = Transformer::new(nnue, game);
+            *self = Transformer::new(nnue, board, king_pos);
             return
         }
         // if captured
         if let Some(uncaptured) = unplayed.captured {
-            self.add(nnue, get_features(uncaptured, unplayed.mv.1, game.king_pos));
+            self.add(nnue, get_features(uncaptured, unplayed.mv.1, king_pos));
         }
         // if promotion
         if unplayed.tp == MoveType::Promotion {
             let queen = Piece { color: unplayed_piece.color, role: Role::Queen };
-            self.add(nnue, get_features(unplayed_piece, unplayed.mv.0, game.king_pos));
-            self.remove(nnue, get_features(queen, unplayed.mv.1, game.king_pos));
+            self.add(nnue, get_features(unplayed_piece, unplayed.mv.0, king_pos));
+            self.remove(nnue, get_features(queen, unplayed.mv.1, king_pos));
             return
         }
         // basic move
-        self.add(nnue, get_features(unplayed_piece, unplayed.mv.0, game.king_pos));
-        self.remove(nnue, get_features(unplayed_piece, unplayed.mv.1, game.king_pos));
+        self.add(nnue, get_features(unplayed_piece, unplayed.mv.0, king_pos));
+        self.remove(nnue, get_features(unplayed_piece, unplayed.mv.1, king_pos));
     }
 
 

@@ -4,7 +4,7 @@ use super::*;
 
 mod analyze;
 use analyze::{analyze};
-mod evaluate;
+mod eval;
 mod choose_move;
 use choose_move::choose_move;
 
@@ -15,12 +15,6 @@ struct Config {
     max_depth: i8
 }
 
-struct MoveInfo {
-    liquidity: i8,
-    depth: i8,
-    way: Vec<Move>,
-}
-
 
 impl Game {
     pub fn autoplay(&mut self) -> () {
@@ -29,7 +23,7 @@ impl Game {
 
         let mut moves_iterated: Vec<i32> = Vec::new();
 
-        let config = Config { init_player: game.player, max_depth: 2 };
+        let config = Config { init_player: game.player, max_depth: 4 };
 
         let mut moves: Vec<(Move, i32)> = Vec::new(); 
 
@@ -38,8 +32,7 @@ impl Game {
             if game.play(mv) {
                 let mut iterated = 0;
                 
-                let info = MoveInfo { liquidity: 2, depth: 1, way: vec![mv] };
-                let value = 0; //analyze(&config, game, &info, &mut iterated);
+                let value = analyze(&config, game, 1, &mut iterated);
 
                 moves_iterated.push(iterated);
 

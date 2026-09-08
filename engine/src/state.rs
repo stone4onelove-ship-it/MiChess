@@ -29,7 +29,6 @@ impl Game {
             legal: self.legal,
             played: self.played,
             history: self.history.clone(),
-            
         }
     }
 }
@@ -102,6 +101,9 @@ impl fmt::Display for Game {
             writeln!(f)?;
         }
 
-        writeln!(f, "\n")
+        writeln!(f, "\ntransformer White: {:?}", self.transformer.0)?;
+        writeln!(f, "transformer Black: {:?}", self.transformer.1)?;
+
+        writeln!(f,"\n")
     }
 }

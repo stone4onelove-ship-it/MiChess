@@ -110,6 +110,9 @@ impl Game {
         self.get_dirty();
         self.update(self.dirty);
 
+        // update transformer
+        self.transformer.play(&NNUE, &self.board, self.king_pos, played);
+
         // check if move is legal, if not loads back up 
         let king_pos: Pos = self.king_pos[self.player.opp() as usize];
         if self.cover_comb[self.player as usize].get(king_pos) {
@@ -125,7 +128,6 @@ impl Game {
         self.no_material_check();
         self.rule_50_check();
         
-
         return true;
     }
 }

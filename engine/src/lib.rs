@@ -8,6 +8,23 @@ pub use state::State;
 mod undo;
 pub use undo::GameLog;
 mod nnue;
+pub use nnue::{Nnue, Transformer};
+
+
+// for testing 
+pub static NNUE: Nnue = Nnue {
+    feature_weights: [[0.2; 128]; 49163],
+    feature_bias: [0.3; 128],
+
+    hidden0_weights: [0.0; 32 * 256],
+    hidden0_bias: [0.0; 32],
+
+    hidden1_weights: [0.0; 32 * 32],
+    hidden1_bias: [0.0; 32],
+
+    output_weights: [0.0; 32],
+    output_bias: 0.0,
+};
 
 
 
@@ -45,38 +62,36 @@ pub struct Game {
     // history
     pub(crate) history: Vec<GameLog>,
 
+    // for nnue
+    pub(crate) transformer: Transformer,
+
 }
 
 impl Game {
     pub fn new() -> Self {
+        let board = Board::new();
+        let king_pos = board.king_pos();
+        let transformer = Transformer::new(&NNUE, &board, king_pos);
+
         let mut game = Game {
             // main game info
-            board: Board([
-                BR, BH, BB, BQ, BK, BB, BH, BR,
-                BP, BP, BP, BP, BP, BP, BP, BP,
-                __, __, __, __, __, __, __, __,
-                __, __, __, __, __, __, __, __,
-                __, __, __, __, __, __, __, __,
-                __, __, __, __, __, __, __, __,
-                WP, WP, WP, WP, WP, WP, WP, WP,
-                WR, WH, WB, WQ, WK, WB, WH, WR,
-            ]),
+            board,
             en_passant: None,
             castle: [[true,true],[true,true]],
             rule_50moves: 0,
-
             // player
             player: Color::White,
+            // mode
+            mode: GameMode::Active,
+
 
             // check
             check: false,
 
-            // mode
-            mode: GameMode::Active,
             
-            //(filled by self.update)
+            //(updated by self.update)
             // king pos 
-            king_pos: [7*8 + 4, 0*8 + 4],
+            king_pos,
             // moves
             cover: BitGrid::new(),
             legal: BitGrid::new(),
@@ -89,6 +104,8 @@ impl Game {
 
             // game history
             history: Vec::new(),
+
+            transformer,
 
         };
         game.update(BitBoard(u64::MAX));
