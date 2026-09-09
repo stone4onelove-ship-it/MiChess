@@ -42,10 +42,14 @@ pub enum MoveType {
 
 
 
-
-
-
-
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MoveError {
+    WrongMode,
+    NoPiece,
+    IlligalMove,
+    KingInDanger,
+}
+    
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum GameMode {

@@ -67,7 +67,7 @@ impl App {
                 let x = col as f32 * self.square_size;
                 let y = row as f32 * self.square_size;
 
-                if let Some(piece) = self.state.board[(row*8 + col) as u8] {
+                if let Some(piece) = self.game.state.board[(row*8 + col) as u8] {
                     if !(self.dragged.is_some() && self.selected.is_some_and(|s| s == (row*8 + col) as u8)) {
                         self.render_piece(&painter, piece, egui::pos2(x, y));
                     }
@@ -83,7 +83,7 @@ impl App {
                     let x = col as f32 * self.square_size;
                     let y = row as f32 * self.square_size;
 
-                    if self.state.legal[selected].get(row*8 + col) {
+                    if self.game.cache.legal[selected].get(row*8 + col) {
                         self.render_legal(&painter,egui::pos2(x, y), self.square_size);
                     }
                 }
@@ -92,7 +92,7 @@ impl App {
 
         // render dragged piece
         if let Some(dragged) = self.dragged && let Some(selected) = self.selected {
-            self.render_piece(&painter, self.state.board[selected].unwrap(), 
+            self.render_piece(&painter, self.game.state.board[selected].unwrap(), 
                 egui::pos2(dragged.x - self.square_size/2.0, dragged.y - self.square_size/2.0)
             );
         }

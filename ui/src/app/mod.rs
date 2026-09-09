@@ -11,7 +11,6 @@ mod handle_input;
 
 struct App {
     game: Game,
-    state: State,
 
     textures: HashMap<String, egui::TextureHandle>,
 
@@ -23,12 +22,8 @@ struct App {
 
 impl App {
     fn new(cc: &eframe::CreationContext) -> Self {
-        let game = Game::new();
-        let state = game.state();
-
         App {
-            game,
-            state,
+            game: Game::new(Board::default()),
 
             textures: App::load_textures(cc),
 

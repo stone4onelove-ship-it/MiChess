@@ -11,12 +11,19 @@ impl App {
         if ui.input(|i| i.key_pressed(egui::Key::Space)) {
             println!("{}", self.game);
             self.game.autoplay();
-            self.update_state();
         }
 
         // print game
         if ui.input(|i| i.key_pressed(egui::Key::C)) {
             println!("{}", self.game);
+        }
+
+        if ui.input(|i| i.key_pressed(egui::Key::Z)) {
+            self.game.undo();
+        }
+
+        if ui.input(|i| i.key_pressed(egui::Key::E)) {
+            println!("{}", self.game.eval());
         }
 
     }
@@ -34,9 +41,9 @@ impl App {
                         // if some piece is already selected
                         Some(selected) => {
                             // if move is legal
-                            if self.state.legal[selected].get(chess_pos) {}
+                            if self.game.cache.legal[selected].get(chess_pos) {}
                             // choose other friendly piece other than selected
-                            else if self.state.board[chess_pos].is_some_and(|p| p.color == self.state.player) {
+                            else if self.game.state.board[chess_pos].is_some_and(|p| p.color == self.game.state.player) {
                                 self.selected = Some(chess_pos);
                                 self.dragged = Some(pos);
                             }
@@ -48,7 +55,7 @@ impl App {
                         },
                         None => {
                             // choose friendly piece
-                            if self.state.board[chess_pos].is_some_and(|p| p.color == self.state.player) {
+                            if self.game.state.board[chess_pos].is_some_and(|p| p.color == self.game.state.player) {
                                 self.selected = Some(chess_pos);
                                 self.dragged = Some(pos);
                             }
@@ -84,9 +91,7 @@ impl App {
                         let chess_pos = ((pos.y / self.square_size) as u8)*8 + (pos.x / self.square_size) as u8;
                         
                         if Some(chess_pos) != self.selected {
-                            if timed(|| self.game.play((selected, chess_pos))) {
-                                println!("eval: {}", timed(|| self.game.nnue_eval()));
-                                self.update_state();
+                            if timed(|| self.game.play((selected, chess_pos)).is_ok()) {
                                 self.selected = None;
                             }
                         }
@@ -101,10 +106,4 @@ impl App {
     }
 
 
-
-
-
-    fn update_state(&mut self) {
-        self.state = self.game.state();
-    }
 }

@@ -10,19 +10,19 @@ use constants::*;
 // Changes: game.game.legal , game.w_cover , game.b_cover
 
 impl Game {
-    pub fn update(&mut self, dirty: BitBoard) -> () {
+    pub fn update(&mut self) -> () {
         // get pieces location BitBoards
-        let pieces = board_to_bitboards(&self.board);
+        let pieces = board_to_bitboards(&self.state.board);
 
         // for every dirty piece
-        for pos in dirty.iter_pos() {
+        for pos in self.played.dirty.clone().iter_pos() {
 
             // cleaning
-            self.cover[pos] = BitBoard::new();
-            self.legal[pos] = BitBoard::new();
+            self.cache.cover[pos] = BitBoard::new();
+            self.cache.legal[pos] = BitBoard::new();
 
             // matching piece
-            if let Some(piece) = self.board[pos] {
+            if let Some(piece) = self.state.board[pos] {
                 match piece.role {
                     Role::Pawn => {
                         self.update_pawn(piece, pos, pieces[piece.color.opp() as usize]);
@@ -42,8 +42,7 @@ impl Game {
                     }
                     Role::King => {
                         self.update_king_cover(pos);
-                        // fill piece pos for legal
-                        self.king_pos[piece.color as usize] = pos;
+                        self.cache.king_pos[piece.color as usize] = pos;
                     }
                 }
             }
@@ -52,13 +51,17 @@ impl Game {
         // update cover comb 
         self.update_cover_comb();
 
-        // king legal updated last
-        for king_pos in self.king_pos {
-            self.update_king_legal(king_pos, pieces[self.board[king_pos].unwrap().color as usize]);
-        }
+        // dirty king legal updated last and fill king pos 
+        self.update_king_legal(self.cache.king_pos[0], pieces[0]);
+        self.update_king_legal(self.cache.king_pos[1], pieces[1]);
 
+        // save legal moves
         self.update_legal_moves();
+        // check if there is a check
+        self.cache.check = self.cache.cover_comb[self.state.player.opp() as usize].get(self.cache.king_pos[self.state.player as usize]);
     }
+
+
 }
 
 
@@ -78,3 +81,4 @@ fn board_to_bitboards(board: &Board) -> [BitBoard;2] {
     }
     [white, black]
 }
+

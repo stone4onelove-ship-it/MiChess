@@ -34,7 +34,7 @@ impl BitBoard {
 
     pub fn iter_pos(&self) -> impl Iterator<Item = Pos> {
         let mut bits = self.0;
-        std::iter::from_fn(move || {
+        core::iter::from_fn(move || {
             if bits == 0 {
                 None
             } else {
@@ -43,24 +43,5 @@ impl BitBoard {
                 Some(pos)
             }
         })
-    }
-}
-
-impl std::ops::BitOrAssign for BitBoard {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0;
-    }
-}
-
-impl std::fmt::Display for BitBoard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for row in 0..8 {
-            for col in 0..8 {
-                let bit = (self.0 >> (row * 8 + col)) & 1;
-                write!(f, "{} ", bit)?;
-            }
-            writeln!(f)?;
-        }
-        Ok(())
     }
 }

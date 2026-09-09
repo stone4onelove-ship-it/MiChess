@@ -1,23 +1,19 @@
 use super::*;
 
-const PINF: i32 =  10_000_000;
-const NINF: i32 = -10_000_000;
-
+const MATE_VALUE: [i32; 2] =  [1_000_000, -1_000_000];
 
 
 pub fn analyze(config: &Config, game: &mut Game, depth: i8, iterated: &mut i32) -> i32 {
 
-    let mut moves: Vec<( Move , i32 )> = Vec::new(); 
+    let mut moves: Vec<(Move, i32)> = Vec::new(); 
 
-
-    for mv in game.legal_moves.clone() {
-
-        if game.play(mv) {
+    for mv in game.cache.legal_moves.clone() {
+        if game.play(mv).is_ok() {
             *iterated += 1;
 
-            let status = status_check(&game.mode, config.init_player);
-            if status != 0 {
-                moves.push((mv, status));
+            // if game is finished
+            if let Some(value) = status(&game.state.mode) {
+                moves.push((mv, value));
                 game.undo();
                 continue;
             }
@@ -25,9 +21,9 @@ pub fn analyze(config: &Config, game: &mut Game, depth: i8, iterated: &mut i32) 
             let mut value = game.eval();
 
             // PLAYER
-            if game.player == config.init_player {
+            if game.state.player == config.init_player {
 
-                let deeper = true;
+                let deeper = depth <= config.max_depth;
                 // go deeper if needed
                 if deeper {
                     value = analyze(config, game, depth + 1, iterated);
@@ -36,7 +32,7 @@ pub fn analyze(config: &Config, game: &mut Game, depth: i8, iterated: &mut i32) 
             // OPONENT
             } else {
 
-                let deeper = true;
+                let deeper = depth <= config.max_depth;
                 // go deeper if needed
                 if deeper {
                     value = analyze(config, game, depth + 1, iterated);
@@ -51,12 +47,11 @@ pub fn analyze(config: &Config, game: &mut Game, depth: i8, iterated: &mut i32) 
     }
 
     // choose worst player outcome
-    let chosen_move: i32;
-    if game.player == config.init_player {
-        chosen_move = moves.iter().max_by_key(|x| x.1).unwrap().1;
+    let chosen_move = if config.init_player == Color::White {
+        moves.iter().max_by_key(|x| x.1).unwrap().1
     } else {
-        chosen_move = moves.iter().min_by_key(|x| x.1).unwrap().1;
-    }
+        moves.iter().min_by_key(|x| x.1).unwrap().1
+    };
 
     
     return chosen_move
@@ -66,9 +61,10 @@ pub fn analyze(config: &Config, game: &mut Game, depth: i8, iterated: &mut i32) 
 
 
 // check if game is runnig or it is finished
-fn status_check(mode: &GameMode, init_player: Color ) -> i32 {
+fn status(mode: &GameMode) -> Option<i32> {
     match mode {
-        &GameMode::Active | &GameMode::Finished(None) => 0,
-        &GameMode::Finished(Some(value)) => { if value == init_player { PINF } else { NINF }}
+        &GameMode::Active => None,
+        &GameMode::Finished(None) => Some(0),
+        &GameMode::Finished(Some(color)) => Some(MATE_VALUE[color as usize]),
     }
 }

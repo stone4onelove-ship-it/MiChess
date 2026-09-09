@@ -82,6 +82,6 @@ impl Nnue {
 
 impl Game {
     pub fn nnue_eval(&self) -> i32 {
-        NNUE.eval(&self.transformer, self.player)
+        NNUE.eval(&self.transformer, self.state.player)
     }
 }

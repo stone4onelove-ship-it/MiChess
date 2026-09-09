@@ -3,60 +3,37 @@ use super::*;
 
 #[derive(Clone)]
 pub struct GameLog {
-    pub board: Board,
-    pub en_passant: Option<u8>,
-    pub castle: [[bool;2];2],
-    pub player: Color,
-    pub mode: GameMode,
-    pub rule_50moves: u8,
-    pub dirty: BitBoard,
-    pub played: Option<PlayedMove>,
+    pub state: GameState,
+    pub played: LastPlayed,
 }
 
 
 impl Game {
     pub fn save(&self) -> GameLog {
         GameLog {
-            board: self.board.clone(),
-            en_passant: self.en_passant,
-            castle: self.castle,
-            player: self.player,
-            mode: self.mode,
-            rule_50moves: self.rule_50moves,
-            dirty: self.dirty,
-            played: self.played,
+            state: self.state.clone(),
+            played: self.played.clone(),
         }
     }
 
-    pub fn load(&mut self, log: GameLog) -> () {
-        self.board = log.board;
-        self.en_passant = log.en_passant;
-        self.castle = log.castle;
-        self.player = log.player;
-        self.mode = log.mode;
-        self.rule_50moves = log.rule_50moves;
-        self.dirty = log.dirty;
-        self.played = log.played;
-
-    }
 
     pub fn undo(&mut self) -> bool {
-        // check if the is hostory
+        // check if history is not empty and pop last
         let Some(log) = self.history.pop() else {
             return false;
         };
 
-        // save current values
-        let current_dirty = self.dirty;
-        let current_played = self.played.unwrap();
+        // undo state
+        self.state = log.state;
+        
+        // update cache with current dirty, undo transformer with current played
+        self.update();
+        self.transformer.undo(&NNUE, &self.state.board, self.cache.king_pos, self.played.mv.unwrap());
 
-        // undo the last move
-        self.load(log);
-        self.update(current_dirty);
+        // update dirty and last_mv
+        self.played = log.played;
 
-        // undo transformer
-        self.transformer.undo(&NNUE, &self.board, self.king_pos, current_played);
-
+        
         true        
     }
 }

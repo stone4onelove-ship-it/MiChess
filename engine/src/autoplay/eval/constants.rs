@@ -19,6 +19,6 @@ pub(super) const QUEEN_VALUE_GRID: [i32; 64] = [0; 64];
 
 pub(super) const KING_MIDGAME_VALUE_GRID: [i32; 64] = [0; 64];
 
-pub(super) const KING_ENDGANE_VALUE_GRID: [i32; 64] = [0; 64];
+pub(super) const KING_ENDGAME_VALUE_GRID: [i32; 64] = [0; 64];
 
 
